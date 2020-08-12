@@ -1,0 +1,62 @@
+--consulta padrao do professor
+--exibe os meses 01, 02 e 03 de 2013 em colunas
+Select   (   {  [Cliente].[Estado].&[Rio de Janeiro], 
+ [Cliente].[Estado].&[Minas Gerais] } )   On Rows , 
+(  { [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[01-2013] , 
+[Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[02-2013] , 
+[Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[03-2013]  }  )  On Columns 
+From  [COMPLETO]
+Where ([Measures].[Faturamento Líquido])
+
+----------------------------------------------------------------------------------------------------------------------------------------------------
+--ALTERAÇÕES FEITAS PELO PROFESSOR DURANTE O CURSO
+
+
+--foi retirada a linha de [Tempo] para o mes 02
+--com o uso de dois pontos (:) ao invés de virgula, exibe os meses 01, 02 e 03 de 2013 em colunas (range)
+Select   (   {  [Cliente].[Estado].&[Rio de Janeiro], 
+ [Cliente].[Estado].&[Minas Gerais] } )   On Rows , 
+(  { [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[01-2013] : --exibe os meses 01, 02 e 03 de 2013 em colunas (range)
+[Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[03-2013]  }  )  On Columns 
+From  [COMPLETO]
+Where ([Measures].[Faturamento Líquido])
+
+
+
+--com o uso de virgula (,) eu especifico elemento a elemento que desejo consultar (elemento 1 = 01 a 03 de 2013 / elemento 2 =  01 a 03 de 2014)
+--com o uso de dois pontos (:) eu especifico o intervalo de elementos que desejo consultar (range de 01 a 03 de 2013 e depois de 01 a 03 de 2014)
+Select   (   {  [Cliente].[Estado].&[Rio de Janeiro], 
+ [Cliente].[Estado].&[Minas Gerais] } )   On Rows , 
+(  { 
+[Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[01-2013] : --range
+[Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[03-2013]  
+, --divisao dos elementos
+[Tempo].[Mës e Ano].&[2014]&[01-2014]&[01-2014]&[01-2014] : --range
+[Tempo].[Mës e Ano].&[2014]&[01-2014]&[01-2014]&[03-2014]
+}  )  On Columns 
+From  [COMPLETO]
+Where ([Measures].[Faturamento Líquido])
+
+
+
+--Eh possivel inverter as linhas e colunas para realizar uma consulta Pivot
+--nesse caso, repare que foi invertido os comandos On Columns e On Rows da query anterior
+Select   (   {  [Cliente].[Estado].&[Rio de Janeiro], 
+ [Cliente].[Estado].&[Minas Gerais] } )   On Columns , --antes era On Rows 
+(  { 
+[Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[01-2013] : --range
+[Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[03-2013]  
+, --divisao dos elementos
+[Tempo].[Mës e Ano].&[2014]&[01-2014]&[01-2014]&[01-2014] : --range
+[Tempo].[Mës e Ano].&[2014]&[01-2014]&[01-2014]&[03-2014]
+}  )  On Rows  --antes era On Columns 
+From  [COMPLETO]
+Where ([Measures].[Faturamento Líquido])
+
+
+
+
+--exercicio Aula 2 - 5
+select ({ [Produto].[Marca].&[Clean] : [Produto].[Marca].&[Light] }) on columns,
+({ [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[01-2013] }) on rows 
+from [COMPLETO]

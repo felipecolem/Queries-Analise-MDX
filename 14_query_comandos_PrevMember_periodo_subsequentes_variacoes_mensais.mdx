@@ -1,0 +1,56 @@
+--Calculos de variacoes entre meses (periodos subsequentes) PREVMEMBER.PARENT
+
+--query comum 
+--retorna o faturamento por mes de todos os meses no DW
+Select NON EMPTY ( { [Tempo].[Hierarquia do Mês e Ano].[Nível Mës e Ano].Members } ) On Rows,
+                 ( { [Measures].[Faturamento] } ) On Columns
+  From [COMPLETO];
+
+
+--Exemplo com PREVMEMBER
+--retorna o faturamento por mes de todos os meses no DW e o novo membro [Variação Faturamento] 
+--que exibe linha a linha a variação do faturamento atual em relacao ao faturamento anterior
+--a formula do novo membro [Variação Faturamento] eh:
+--faturamento - (faturamento do membro anterior)
+WITH 
+MEMBER [Measures].[Variação Faturamento] AS
+      '[Measures].[Faturamento] - ( [Measures].[Faturamento] , [Tempo].[Hierarquia do Mês e Ano].CurrentMember.PrevMember )',
+FORMAT_STRING = '##,###,00'
+Select NON EMPTY ( { [Tempo].[Hierarquia do Mês e Ano].[Nível Mës e Ano].Members } ) On Rows,
+                 ( { [Measures].[Faturamento] 
+				 ,   [Measures].[Variação Faturamento] } ) On Columns
+  From [COMPLETO];
+
+
+--Exemplo com PREVMEMBER para percentual
+--retorna o faturamento por mes de todos os meses no DW, o membro [Variação Faturamento] e o novo membro [Variação Faturamento Percentual]
+--que exibe linha a linha a variação do faturamento em relacao ao faturamento anterior em percentual
+--a formula do novo membro [Variação Faturamento Percentual] eh:
+--(faturamento do membro atual) / (faturamento do membro anterior) - 1
+WITH 
+MEMBER [Measures].[Variação Faturamento] AS
+      '[Measures].[Faturamento] - ( [Measures].[Faturamento] , [Tempo].[Hierarquia do Mês e Ano].CurrentMember.PrevMember )',
+FORMAT_STRING = '##,###,00'
+MEMBER [Measures].[Variação Faturamento Percentual] AS
+  '( ( [Measures].[Faturamento] , [Tempo].[Hierarquia do Mês e Ano].CurrentMember ) / 
+	 ( [Measures].[Faturamento] , [Tempo].[Hierarquia do Mês e Ano].CurrentMember.PrevMember ) ) - 1',
+FORMAT_STRING = '##,###,00 %'
+Select NON EMPTY ( { [Tempo].[Hierarquia do Mês e Ano].[Nível Mës e Ano].Members } ) On Rows,
+                 ( { [Measures].[Faturamento] 
+				 ,   [Measures].[Variação Faturamento]
+				 ,   [Measures].[Variação Faturamento Percentual] } ) On Columns
+  From [COMPLETO];
+
+---
+--Exercicio 05.02
+--Queremos montar um MDX que obtenha a variação do faturamento entre o ano de 2013 e 2015, usando PREVMEMBER. 
+--Qual seria o MDX correto?
+--REPOSTA: Não podemos obter a variação de 2013 com 2015 usando PREVMEMBER.
+--a query abaixo seria a mais proxima disso, porem ela exibe primeiro a variacal entre 2013 e 2014 e depois entre 2014 e 2015
+WITH 
+MEMBER [Measures].[Variação Faturamento] AS
+      '[Measures].[Faturamento] - ([Measures].[Faturamento], [Tempo].[Hierarquia do Mês e Ano].Currentmember.PrevMember )',
+FORMAT_STRING = "##,###.00"
+Select NON EMPTY {[Tempo].[Hierarquia do Mês e Ano].[Ano].members} on rows,
+                 {[Measures].[Faturamento], [Measures].[Variação Faturamento]} on columns
+From [COMPLETO];

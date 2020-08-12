@@ -1,0 +1,30 @@
+--comando Hierarchize, serve para exibir a linha ou coluna na hieararquia da montagem do DW
+
+--Exemplo SEM Hierarchize (linhas)
+--exibe os estados na ordem Sao Paulo, Goias, Parana e Bahia (ordem que foi montada a query)
+Select ( { [Cliente].[Estado].&[São Paulo] , [Cliente].[Estado].&[Goiais] , [Cliente].[Estado].&[Paraná] , [Cliente].[Estado].&[Bahia] } ) On Rows,
+       ( { [Tempo].[Semestre e Ano].Members } ) On Columns
+  From [COMPLETO];
+
+
+--Exemplo COM Hierarchize (linhas)
+--exibe os estados na ordem Bahia, Goias, Parana e Sao Paulo (ordem hierarquica que foi montado o DW)
+Select Hierarchize ( { [Cliente].[Estado].&[São Paulo] , [Cliente].[Estado].&[Goiais] , [Cliente].[Estado].&[Paraná] , [Cliente].[Estado].&[Bahia] } ) On Rows,
+                   ( { [Tempo].[Semestre e Ano].Members } ) On Columns
+  From [COMPLETO];
+
+------------------------------------------------------------------------
+
+--Exemplo SEM Hierarchize (colunas)
+--exibe os estados na ordem Sao Paulo, Goias, Parana e Bahia (ordem que foi montada a query)
+Select ( { [Cliente].[Estado].&[São Paulo] , [Cliente].[Estado].&[Goiais] , [Cliente].[Estado].&[Paraná] , [Cliente].[Estado].&[Bahia] } ) On Columns,
+       ( { [Tempo].[Semestre e Ano].Members } ) On Rows
+  From [COMPLETO];
+
+
+--Exemplo COM Hierarchize (colunas)
+--exibe os estados na ordem Bahia, Goias, Parana e Sao Paulo (ordem hierarquica que foi montado o DW)
+Select Hierarchize ( { [Cliente].[Estado].&[São Paulo] , [Cliente].[Estado].&[Goiais] , [Cliente].[Estado].&[Paraná] , [Cliente].[Estado].&[Bahia] } ) On Columns,
+                   ( { [Tempo].[Semestre e Ano].Members } ) On Rows
+  From [COMPLETO];
+

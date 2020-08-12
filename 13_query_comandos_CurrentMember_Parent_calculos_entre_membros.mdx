@@ -1,0 +1,97 @@
+--Calculos entre membros com CURRENTMEMBER.PARENT
+
+--query comum 
+--retorna o faturamento por mes do primeiro trimestre de 2013
+--com o uso do comando CHILDREN, exibe os 3 meses que compõem o trimestre de forma separada linha a linha
+Select NON EMPTY ( { [Tempo].[Hierarquia do Mês e Ano].[Ano].&[2013].&[Primeiro Semestre 2013].&[2013]&[01-2013]&[01-2013].Children } ) On Rows,
+                 ( { [Measures].[Faturamento] } ) On Columns
+  From [COMPLETO];
+
+--retorna o faturamento por mes do primeiro trimestre de 2013 junto com o novo membro [% Taxa Variação]
+--a formula do novo membro [% Taxa Variação] funciona assim: 
+--(faturamento de janeiro) / faturamento total do primeiro trimestre   = 41,8%  (o FORMAT_STRING automaticamente formata o resultado em percentual)
+--(faturamento de fevereiro) / faturamento total do primeiro trimestre = 34,82% (o FORMAT_STRING automaticamente formata o resultado em percentual)
+--(faturamento de março) / faturamento total do primeiro trimestre     = 23,39% (o FORMAT_STRING automaticamente formata o resultado em percentual)
+WITH 
+MEMBER [Measures].[% Taxa Variação] AS
+      '[Measures].[Faturamento] / 
+	 ( [Measures].[Faturamento] , [Tempo].[Hierarquia do Mês e Ano].[Ano].&[2013].&[Primeiro Semestre 2013].&[2013]&[01-2013]&[01-2013] )'
+, FORMAT_STRING = '#,###.## %' 
+Select NON EMPTY ( { [Tempo].[Hierarquia do Mês e Ano].[Ano].&[2013].&[Primeiro Semestre 2013].&[2013]&[01-2013]&[01-2013].Children } ) On Rows,
+                 ( { [Measures].[Faturamento] 
+				 ,   [Measures].[% Taxa Variação] } ) On Columns 
+  From [COMPLETO];
+
+--Exemplo com CurrentMember.Parent
+--Uma maneira mais pratica de fazer a query anterior, utilizando o comando CurrentMember.Parent
+--com esse comando, o calculo sera realizado com o pai do membro atual, ou seja, 
+--o membro atual eh o mes de janeiro, o pai de janeiro eh o primeiro trimestre, 
+--logo, o calculo esta sendo feito com faturamento total do primeiro trimestre
+--dessa forma fica mais pratico de realizar manutencao e reaproveitamento da query, 
+--sendo necessario alterar apenas o indicador que deseja exibir no select (exemplo na proxima query)
+WITH 
+MEMBER [Measures].[% Taxa Variação] AS
+      '[Measures].[Faturamento] / 
+	 ( [Measures].[Faturamento] , [Tempo].[Hierarquia do Mês e Ano].CurrentMember.Parent )'
+, FORMAT_STRING = '#,###.## %' 
+Select NON EMPTY ( { [Tempo].[Hierarquia do Mês e Ano].[Ano].&[2013].&[Primeiro Semestre 2013].&[2013]&[01-2013]&[01-2013].Children } ) On Rows,
+                 ( { [Measures].[Faturamento] 
+				 ,   [Measures].[% Taxa Variação] } ) On Columns 
+  From [COMPLETO];
+
+--Exemplo 2 com CurrentMember.Parent
+--foi alterado apenas o indicador que deseja exibir no select
+--retorna o faturamento total para o primeiro e segundo trimestre de 2013 junto com a [% Taxa Variação]
+WITH 
+MEMBER [Measures].[% Taxa Variação] AS
+      '[Measures].[Faturamento] / 
+	 ( [Measures].[Faturamento] , [Tempo].[Hierarquia do Mês e Ano].CurrentMember.Parent )'
+, FORMAT_STRING = '#,###.## %' 
+Select NON EMPTY ( { [Tempo].[Hierarquia do Mês e Ano].[Ano].&[2013].&[Primeiro Semestre 2013].Children } ) On Rows,
+                 ( { [Measures].[Faturamento] 
+				 ,   [Measures].[% Taxa Variação] } ) On Columns 
+  From [COMPLETO];
+
+------------------------------------
+
+--utilizando o comando CurrentMember.Parent de forma recursiva
+--o comando CurrentMember.Parent pode ser utilizado de forma recursiva, ou seja,
+--eh possivel adicionar mais um .Parent em seguida dele para que seja criado um novo membro 1 nivel acima do membro atual
+--no exemplo abaixo, eh criado mais 2 membros,
+--o [% Taxa Variação Semestre] com .Parent.Parent 
+--e [% Taxa Variação Ano]      com .Parent.Parent.Parent
+--retorna o faturamento mes a mes para o ano de 2013 e as taxas de variacao trimestre, semestre e ano
+WITH 
+MEMBER [Measures].[% Taxa Variação Trimestre] AS
+      '[Measures].[Faturamento] / 
+	 ( [Measures].[Faturamento] , [Tempo].[Hierarquia do Mês e Ano].CurrentMember.Parent )'
+, FORMAT_STRING = '#,###.## %' 
+MEMBER [Measures].[% Taxa Variação Semestre] AS
+      '[Measures].[Faturamento] / 
+	 ( [Measures].[Faturamento] , [Tempo].[Hierarquia do Mês e Ano].CurrentMember.Parent.Parent )'
+, FORMAT_STRING = '#,###.## %' 
+MEMBER [Measures].[% Taxa Variação Ano] AS
+      '[Measures].[Faturamento] / 
+	 ( [Measures].[Faturamento] , [Tempo].[Hierarquia do Mês e Ano].CurrentMember.Parent.Parent.Parent )'
+, FORMAT_STRING = '#,###.## %' 
+Select NON EMPTY ( { [Tempo].[Hierarquia do Mês e Ano].[Nível Mës e Ano].Members } ) On Rows,
+                 ( { [Measures].[Faturamento] 
+				 ,   [Measures].[% Taxa Variação Trimestre]
+				 ,   [% Taxa Variação Semestre]
+				 ,   [% Taxa Variação Ano] } ) On Columns 
+  From [COMPLETO];
+
+------------------------------------
+--Exercicio 4.9 
+--Nosso objetivo é saber quanto que, no ano de 2014, cada fábrica faturou e ver a porcentagem de participação de vendas de cada uma delas. 
+--Qual seria o MDX?
+--Resposta: alternativa 1 abaixo
+WITH 
+MEMBER [Measures].[Participação de Vendas por Fábrica] AS
+     ' [Measures].[Faturamento] / 
+     ( [Measures].[Faturamento], [Fábrica].[Hierarquia das Fábricas].Currentmember.Parent )'
+, FORMAT_STRING = '#,###.## %'
+Select NON EMPTY ({[Fábrica].[Hierarquia das Fábricas].[Nível Fábrica].Members}) on Rows,
+                 ({[Measures].[Faturamento], [Measures].[Participação de Vendas por Fábrica]}) on Columns 
+  From [COMPLETO]
+ Where [Tempo].[Hierarquia do Mês e Ano].[Ano].&[2014];

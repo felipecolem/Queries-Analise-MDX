@@ -1,0 +1,25 @@
+--comando NON EMPTY
+
+--query comum
+--retorna o faturamento de todos os produtos para a loja Drogas Super Brasília - DF
+--nesse caso, ira retornar algumas linhas nulas, isso acontece pois essa loja nunca comprou esses produtos
+Select ( { [Produto].[Produto].Members } ) On Rows,
+       ( { [Measures].[Faturamento] } ) On Columns
+  From [COMPLETO]
+ Where [Cliente].[Hierarquia Segmento].[Nível Segmento].&[Farmácias].&[Drogas Super Brasília - DF];
+
+--retorna o faturamento de todos os produtos para a loja Drogas Super Brasília - DF
+--com uso do comando Non Empty, elimia as linhas nulas e irá retornar apenas as linhas que contem valores
+Select Non Empty ( { [Produto].[Produto].Members } ) On Rows,
+                 ( { [Measures].[Faturamento] } ) On Columns
+  From [COMPLETO]
+ Where [Cliente].[Hierarquia Segmento].[Nível Segmento].&[Farmácias].&[Drogas Super Brasília - DF];
+
+------------------------------------------------------
+
+--Exercicio Aula 02.10
+--com uso do comando Non Empty, elimia tanto as linhas quanto as colunas nulas e irá retornar apenas as linhas/colunas que contem valores
+Select Non Empty ( { [Produto].[Produto].Members } ) On Columns,
+                 ( { [Measures].[Faturamento] } ) On Rows
+  From [COMPLETO]
+ Where [Cliente].[Hierarquia Segmento].[Nível Segmento].&[Farmácias].&[Drogas Super Brasília - DF];

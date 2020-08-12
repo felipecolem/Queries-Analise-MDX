@@ -1,0 +1,74 @@
+--comando WITH, serve para realizar calculos em momento de execucao da query
+--o normal eh que os calculos ja tenham sido feitos na composicao do OLAP
+--porem existem situacoes que sao necessarios realizar o calculo em tempo de execucao da query
+
+--query comum
+--retorna o faturamento e o faturamento liquido por categoria de produto
+Select ( { [Produto].[Categoria].Members } ) On Rows,
+       ( { [Measures].[Faturamento] , [Measures].[Faturamento Líquido] } ) On Columns 
+  From [COMPLETO]
+ Where ( [Tempo].[Ano].&[2014] );
+
+
+--Exemplo de WITH
+--retorna o faturamento, faturamento liquido e Novo Faturamento Liquido criado em tempo de execucao por categoria de produto
+--Obs: o indicador "Novo Faturamento Liquido" eh igual ao "Faturamento Liquido" propositalmente
+WITH
+MEMBER [Measures].[Novo Faturamento Líquido] AS
+       '[Measures].[Faturamento] - [Measures].[Frete Rateio] - [Measures].[Imposto]'
+Select ( { [Produto].[Categoria].Members } ) On Rows,
+       ( { [Measures].[Faturamento] , [Measures].[Faturamento Líquido] , [Measures].[Novo Faturamento Líquido] } ) On Columns 
+  From [COMPLETO]
+ Where ( [Tempo].[Ano].&[2014] );
+
+--Exemplo de WITH com 2 MEMBERS
+--retorna o faturamento, faturamento liquido, Novo Faturamento Liquido e variação faturamento criado em tempo de execucao por categoria de produto 
+WITH
+MEMBER [Measures].[Novo Faturamento Líquido] AS
+       '[Measures].[Faturamento] - [Measures].[Frete Rateio] - [Measures].[Imposto]'
+MEMBER [Measures].[Variação Faturamento] AS
+       '[Measures].[Novo Faturamento Líquido] / [Measures].[Faturamento]'
+Select ( { [Produto].[Categoria].Members } ) On Rows,
+       ( { [Measures].[Faturamento] , [Measures].[Faturamento Líquido] , [Measures].[Novo Faturamento Líquido] , [Measures].[Variação Faturamento] } ) On Columns 
+  From [COMPLETO]
+ Where ( [Tempo].[Ano].&[2014] );
+
+--Exemplo de WITH com 2 MEMBERS e FORMAT_STRING
+--o FORMAT_STRING serve para realizar formatacao de string
+--igual a query anterior, porem com os campos formatados
+--[Novo Faturamento Líquido] = '#,###,##', formatado com casas de milhares e decimal 
+--(ATENCAO, a formatacao deve ser feita no padrao em ingles [, para milhar e . para decimal], mas o resultado ira depedender do idioma do servidor)
+--[Variação Faturamento] = '#,###,## %', realiza a divisao por 100 e exibe em formato de percentual
+WITH
+MEMBER [Measures].[Novo Faturamento Líquido] AS
+       '[Measures].[Faturamento] - [Measures].[Frete Rateio] - [Measures].[Imposto]',
+FORMAT_STRING = '#,###,##'
+MEMBER [Measures].[Variação Faturamento] AS
+       '[Measures].[Novo Faturamento Líquido] / [Measures].[Faturamento]',
+FORMAT_STRING = '#,###,## %'
+Select ( { [Produto].[Categoria].Members } ) On Rows,
+       ( { [Measures].[Faturamento] , [Measures].[Faturamento Líquido] , [Measures].[Novo Faturamento Líquido] , [Measures].[Variação Faturamento] } ) On Columns 
+  From [COMPLETO]
+ Where ( [Tempo].[Ano].&[2014] );
+
+----------------------------------------------------------------------------
+--WITH para calculo entre membros de dimensao (os exemplos anteriores eram para caluclos de medidas)
+
+--query comum
+--retorna o faturamento das marcas para janeiro e fevereiro de 2013 
+Select ( { [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[01-2013] , [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[02-2013] } ) On Columns, 
+       ( { [Produto].[Marca].Members } ) On Rows
+  From [COMPLETO]
+ Where [Measures].[Faturamento];
+
+--Exemplo de WITH para calculo de variacao de mebros da dimensao TEMPO
+--retorna o faturamento das marcas para janeiro e fevereiro de 2013 e a variacao entre os 2 meses
+WITH
+MEMBER [Tempo].[Mës e Ano].[Var Fev Jan] AS
+'(1 - ([Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[01-2013] / [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[02-2013]))',
+FORMAT_STRING = '#,###,00 %'
+Select ( { [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[01-2013] , [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[02-2013] , [Tempo].[Mës e Ano].[Var Fev Jan] } ) On Columns, 
+       ( { [Produto].[Marca].Members } ) On Rows
+  From [COMPLETO]
+ Where [Measures].[Faturamento];
+

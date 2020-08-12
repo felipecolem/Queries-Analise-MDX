@@ -1,0 +1,105 @@
+--comando WITH, funcoes avançadas de calculo
+
+--query comum
+--retorna a margem de janeiro/2013 a junho/2013
+Select ( { [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[01-2013],
+           [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[02-2013],
+           [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[03-2013],
+           [Tempo].[Mës e Ano].&[2013]&[01-2013]&[02-2013]&[04-2013],
+           [Tempo].[Mës e Ano].&[2013]&[01-2013]&[02-2013]&[05-2013],
+           [Tempo].[Mës e Ano].&[2013]&[01-2013]&[02-2013]&[06-2013] } ) On Rows,
+       ( { [Measures].[Margem] } )  On Columns
+  From [COMPLETO];
+
+--Exemplo de WITH com SUM
+--retorna a margem de janeiro/2013 a junho/2013
+--junto com a SOMA dos indicadores de janeiro/2013 a junho/2013 numa nova linha
+WITH
+MEMBER [Tempo].[Mës e Ano].[Soma] AS
+   'SUM( { [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[01-2013]
+         , [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[02-2013]
+         , [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[03-2013]
+         , [Tempo].[Mës e Ano].&[2013]&[01-2013]&[02-2013]&[04-2013]
+         , [Tempo].[Mës e Ano].&[2013]&[01-2013]&[02-2013]&[05-2013]
+         , [Tempo].[Mës e Ano].&[2013]&[01-2013]&[02-2013]&[06-2013] } )'
+Select ( { [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[01-2013]
+         , [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[02-2013]
+         , [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[03-2013]
+         , [Tempo].[Mës e Ano].&[2013]&[01-2013]&[02-2013]&[04-2013]
+         , [Tempo].[Mës e Ano].&[2013]&[01-2013]&[02-2013]&[05-2013]
+         , [Tempo].[Mës e Ano].&[2013]&[01-2013]&[02-2013]&[06-2013]
+		 , [Tempo].[Mës e Ano].[Soma] } ) On Rows,
+       ( { [Measures].[Margem] } )  On Columns
+  From [COMPLETO];
+
+--Exemplo de WITH com AVG
+--retorna a margem de janeiro/2013 a junho/2013
+--junto com a MEDIA dos indicadores de janeiro/2013 a junho/2013 numa nova linha
+WITH
+MEMBER [Tempo].[Mës e Ano].[Média] AS
+   'AVG( { [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[01-2013]
+         , [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[02-2013]
+         , [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[03-2013]
+         , [Tempo].[Mës e Ano].&[2013]&[01-2013]&[02-2013]&[04-2013]
+         , [Tempo].[Mës e Ano].&[2013]&[01-2013]&[02-2013]&[05-2013]
+         , [Tempo].[Mës e Ano].&[2013]&[01-2013]&[02-2013]&[06-2013] } )'
+Select ( { [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[01-2013]
+         , [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[02-2013]
+         , [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[03-2013]
+         , [Tempo].[Mës e Ano].&[2013]&[01-2013]&[02-2013]&[04-2013]
+         , [Tempo].[Mës e Ano].&[2013]&[01-2013]&[02-2013]&[05-2013]
+         , [Tempo].[Mës e Ano].&[2013]&[01-2013]&[02-2013]&[06-2013]
+		 , [Tempo].[Mës e Ano].[Média] } ) On Rows,
+       ( { [Measures].[Margem] } )  On Columns
+  From [COMPLETO];
+
+--Exemplo de WITH com MAX
+--retorna a margem de janeiro/2013 a junho/2013
+--junto com o valor MAXIMO dos indicadores de janeiro/2013 a junho/2013 numa nova linha
+WITH
+MEMBER [Tempo].[Mës e Ano].[Máximo] AS
+   'MAX( { [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[01-2013]
+         , [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[02-2013]
+         , [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[03-2013]
+         , [Tempo].[Mës e Ano].&[2013]&[01-2013]&[02-2013]&[04-2013]
+         , [Tempo].[Mës e Ano].&[2013]&[01-2013]&[02-2013]&[05-2013]
+         , [Tempo].[Mës e Ano].&[2013]&[01-2013]&[02-2013]&[06-2013] } )'
+Select ( { [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[01-2013]
+         , [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[02-2013]
+         , [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[03-2013]
+         , [Tempo].[Mës e Ano].&[2013]&[01-2013]&[02-2013]&[04-2013]
+         , [Tempo].[Mës e Ano].&[2013]&[01-2013]&[02-2013]&[05-2013]
+         , [Tempo].[Mës e Ano].&[2013]&[01-2013]&[02-2013]&[06-2013]
+		 , [Tempo].[Mës e Ano].[Máximo] } ) On Rows,
+       ( { [Measures].[Margem] } )  On Columns
+  From [COMPLETO];
+
+------------------------------------------------------
+--Exercicio 3.05
+--Qual é a expressão correta para obter o menor faturamento de uma categoria de produtos no ano de 2014?
+
+--Exemplo de WITH com MIN
+--Minha solucao (Errado)
+WITH
+MEMBER [Tempo].[Mës e Ano].[Mínimo] AS
+   'MIN( { [Tempo].[Mës e Ano].&[2014]&[01-2014]&[01-2014]&[01-2014] 
+         : [Tempo].[Mës e Ano].&[2014]&[02-2014]&[04-2014]&[12-2014] } )'
+Select ( { [Tempo].[Mës e Ano].&[2014]&[01-2014]&[01-2014]&[01-2014] 
+         : [Tempo].[Mës e Ano].&[2014]&[02-2014]&[04-2014]&[12-2014] 
+		 , [Tempo].[Mës e Ano].[Mínimo]} ) On Rows,
+       ( { [Produto].[Categoria].Members } )  On Columns
+  From [COMPLETO]
+ Where ( { [Measures].[Faturamento] } );
+
+--Exemplo de WITH com MIN
+--Solucao do Professor (Correto)
+WITH 
+MEMBER [Produto].[Hierarquia de Produtos].[Mínimo] AS
+    'MIN({[Produto].[Hierarquia de Produtos].[Nível Categoria].Members}
+	     ,[Measures].[Faturamento])'
+SELECT ({ [Produto].[Hierarquia de Produtos].[Mínimo]}) ON ROWS,
+          [Measures].[Faturamento] ON COLUMNS
+  FROM [COMPLETO]
+ WHERE [Tempo].[Hierarquia do Mês e Ano].[Ano].&[2014];
+
+--5594731,9621582

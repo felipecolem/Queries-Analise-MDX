@@ -1,0 +1,53 @@
+--Comando PERIODSTODATE, serve para realizar somas de periodos, exemplo, soma de todo o faturamento por ano YTD (Year to Date)
+
+--query comum
+--retorna o faturamento por mes do de jan/2013 a dez/2015
+Select NON EMPTY ( { [Tempo].[Hierarquia do Mês e Ano].[Nível Mës e Ano].Members } ) On Rows,
+                 ( { [Measures].[Faturamento] } ) On Columns
+  From [COMPLETO];
+
+--PeriodsToDate
+--YTD - Year to Date (Ano ate a Data)
+--retorna o faturamento por mes do de jan/2013 a dez/2015 e o novo membro [Faturamento YTD] contendo a soma do faturamento ate o fim do ano
+--repare que quando vira o ano, a soma fecha em dezembro de 20xx e reinicia e janeiro de 20xx automaticamente
+--IMPORTANTE: o calculo funciona corretamente nao soh pela funcao ter sido feita corretamente, mas tbm pq o DW foi carregado corretamente na etapa de ETL, onde foi criada a iteligencia de BI para a dimensao tempo
+WITH
+MEMBER [Measures].[Faturamento YTD] AS
+'Sum( PeriodsToDate( [Tempo].[Hierarquia do Mês e Ano].[Ano] , [Tempo].[Hierarquia do Mês e Ano].CurrentMember) , [Measures].[Faturamento] )',
+FORMAT_STRING = '##,###.00'
+Select NON EMPTY ( { [Tempo].[Hierarquia do Mês e Ano].[Nível Mës e Ano].Members } ) On Rows,
+                 ( { [Measures].[Faturamento] 
+				 ,   [Measures].[Faturamento YTD] } ) On Columns
+  From [COMPLETO];
+
+
+--PeriodsToDate
+--QTD - Quarte to Date (Trimestre ate a Data)
+--retorna o faturamento por mes do de jan/2013 a dez/2015 e o novo membro [Faturamento QTD] contendo a soma do faturamento ate o fim trimestre
+--repare que quando vira o trimestre, a soma fecha em marco e reinicia e abril automaticamente e assim sucessivamente
+--IMPORTANTE: o calculo funciona corretamente nao soh pela funcao ter sido feita corretamente, mas tbm pq o DW foi carregado corretamente na etapa de ETL, onde foi criada a iteligencia de BI para a dimensao tempo
+WITH
+MEMBER [Measures].[Faturamento YTD] AS
+'Sum( PeriodsToDate( [Tempo].[Hierarquia do Mês e Ano].[Ano] , [Tempo].[Hierarquia do Mês e Ano].CurrentMember) , [Measures].[Faturamento] )',
+FORMAT_STRING = '##,###.00'
+MEMBER [Measures].[Faturamento QTD] AS
+'Sum( PeriodsToDate( [Tempo].[Hierarquia do Mês e Ano].[Nível Trimestre e Ano] , [Tempo].[Hierarquia do Mês e Ano].CurrentMember) , [Measures].[Faturamento] )',
+FORMAT_STRING = '##,###.00'
+Select NON EMPTY ( { [Tempo].[Hierarquia do Mês e Ano].[Nível Mës e Ano].Members } ) On Rows,
+                 ( { [Measures].[Faturamento] 
+				 ,   [Measures].[Faturamento YTD]
+				 ,   [Measures].[Faturamento QTD] } ) On Columns
+  From [COMPLETO];
+
+------------------------------------------------------------
+
+--Exercicio 05.07
+--Usando MDX, queremos obter um resultado que veja o acumulado no ano, em cada trimestre. Qual seria o MDX correto?
+WITH MEMBER
+[Measures].[Faturamento Trimestre no Ano] AS
+'Sum(PeriodsToDate([Tempo].[Hierarquia do Mês e Ano].[Ano], [Tempo].[Hierarquia do Mês e Ano].Currentmember),[Measures].[Faturamento])',
+FORMAT_STRING = "##,###.00"
+SELECT NON EMPTY ({[Tempo].[Hierarquia do Mês e Ano].[Nível Trimestre e Ano].Members})  ON ROWS,
+({[Measures].[Faturamento], [Measures].[Faturamento Trimestre no Ano]}) ON COLUMNS
+FROM [COMPLETO]
+

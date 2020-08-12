@@ -1,0 +1,78 @@
+--comandos LAG, LEAD, LASTPERIODS, HEAD e TAIL servem para deslocar dentro da dimensao
+--ou seja, a partir de um membro especifico da dimensao, subir e descer dentro do mesmo nivel em que se encontra da dimensao
+
+--query comum
+--retorna o faturamento para Junho/2014
+Select NON EMPTY ( { [Tempo].[Hierarquia do Mês e Ano].[Ano].&[2014].&[Primeiro Semestre 2014].&[2014]&[01-2014]&[02-2014].&[2014]&[01-2014]&[02-2014]&[06-2014] } ) On Rows,
+                 ( { [Measures].[Faturamento] } ) On Columns
+  From [COMPLETO];
+
+
+--Lag
+--retorna o faturamento para Junho/2014 
+--e com uso da funcao LAG uma nova linha contendo o faturamento para o 3º mes ACIMA do membro atual
+Select NON EMPTY ( { [Tempo].[Hierarquia do Mês e Ano].[Ano].&[2014].&[Primeiro Semestre 2014].&[2014]&[01-2014]&[02-2014].&[2014]&[01-2014]&[02-2014]&[06-2014]
+                 ,   [Tempo].[Hierarquia do Mês e Ano].[Ano].&[2014].&[Primeiro Semestre 2014].&[2014]&[01-2014]&[02-2014].&[2014]&[01-2014]&[02-2014]&[06-2014].Lag(3) } ) On Rows,
+                 ( { [Measures].[Faturamento] } ) On Columns
+  From [COMPLETO];
+
+
+--Lead
+--retorna o faturamento para Junho/2014 
+--e com uso da funcao LEAD uma nova linha contendo o faturamento para o 3º mes ABAIXO do membro atual
+Select NON EMPTY ( { [Tempo].[Hierarquia do Mês e Ano].[Ano].&[2014].&[Primeiro Semestre 2014].&[2014]&[01-2014]&[02-2014].&[2014]&[01-2014]&[02-2014]&[06-2014]
+                 ,   [Tempo].[Hierarquia do Mês e Ano].[Ano].&[2014].&[Primeiro Semestre 2014].&[2014]&[01-2014]&[02-2014].&[2014]&[01-2014]&[02-2014]&[06-2014].Lead(3) } ) On Rows,
+                 ( { [Measures].[Faturamento] } ) On Columns
+  From [COMPLETO];
+
+
+--LastPeriods Anterior (6 positivo)
+--retorna o faturamento para Junho/2014 
+--e com uso da funcao LASTPERIODS 6, novas linhas contendo o faturamento para os 6 meses ACIMA do membro atual
+Select NON EMPTY ( { LastPeriods(6, 
+                     [Tempo].[Hierarquia do Mês e Ano].[Ano].&[2014].&[Primeiro Semestre 2014].&[2014]&[01-2014]&[02-2014].&[2014]&[01-2014]&[02-2014]&[06-2014]) } ) On Rows,
+                 ( { [Measures].[Faturamento] } ) On Columns
+  From [COMPLETO];
+
+--LastPeriods Posterior (6 negativo)
+--retorna o faturamento para Junho/2014 
+--e com uso da funcao LASTPERIODS -6, novas linhas contendo o faturamento para os 6 meses ABAIXO do membro atual
+Select NON EMPTY ( { LastPeriods(-6, 
+                     [Tempo].[Hierarquia do Mês e Ano].[Ano].&[2014].&[Primeiro Semestre 2014].&[2014]&[01-2014]&[02-2014].&[2014]&[01-2014]&[02-2014]&[06-2014]) } ) On Rows,
+                 ( { [Measures].[Faturamento] } ) On Columns
+  From [COMPLETO];
+
+--Head
+--retorna o faturamento para Junho/2014 
+--e com uso da funcao HEAD 2 eh exibido apenas as 2 PRIMEIRAS linhas que sao retornadas da funcao LASTPERIODS -6
+Select NON EMPTY ( { Head(
+                     LastPeriods(-6, 
+                     [Tempo].[Hierarquia do Mês e Ano].[Ano].&[2014].&[Primeiro Semestre 2014].&[2014]&[01-2014]&[02-2014].&[2014]&[01-2014]&[02-2014]&[06-2014]) 
+					 ,2)
+					 } ) On Rows,
+                 ( { [Measures].[Faturamento] } ) On Columns
+  From [COMPLETO];
+
+--Tail
+--retorna o faturamento para Junho/2014 
+--e com uso da funcao TAIL 2 eh exibido apenas as 2 ULTIMAS linhas que sao retornadas da funcao LASTPERIODS -6
+Select NON EMPTY ( { Tail(
+                     LastPeriods(-6, 
+                     [Tempo].[Hierarquia do Mês e Ano].[Ano].&[2014].&[Primeiro Semestre 2014].&[2014]&[01-2014]&[02-2014].&[2014]&[01-2014]&[02-2014]&[06-2014]) 
+					 ,2)
+					 } ) On Rows,
+                 ( { [Measures].[Faturamento] } ) On Columns
+  From [COMPLETO];
+
+------------------------------------------------------------
+
+
+--Exercicio 05.09
+--O meu usuário deseja ver as vendas nos doze meses subsequentes ao mês de outubro de 2014. Qual seria o MDX correto?
+--RESPOSTA: Alternativa correta! O parâmetro para ver os meses a frente do mês de referência deve ser negativo. Como queremos ver os próximos 12 meses, ele deve ser -12.
+SELECT NON EMPTY ({
+LastPeriods(-12,[Tempo].[Hierarquia do Mês e Ano].[Ano].&[2014].&[Segundo Semestre 2014].&[2014]&[02-2014]&[04-2014].&[2014]&[02-2014]&[04-2014]&[10-2014]
+)
+}) ON ROWS,
+({[Measures].[Faturamento]}) ON COLUMNS
+FROM [COMPLETO]

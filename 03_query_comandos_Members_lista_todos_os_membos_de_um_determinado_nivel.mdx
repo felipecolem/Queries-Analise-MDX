@@ -1,0 +1,25 @@
+--comando .Members serve para listar todos os membros de um determinado nível que deseja analisar  
+
+--consulta o faturamento por estado x periodo de janeiro 2014 até junho 2014
+--com o comando .Members, sera listado todos os estados
+Select ( { [Cliente].[Estado].Members } ) on rows,
+( { [Tempo].[Mës e Ano].&[2014]&[01-2014]&[01-2014]&[01-2014] : 
+    [Tempo].[Mës e Ano].&[2014]&[01-2014]&[02-2014]&[06-2014] } ) on columns
+ from [COMPLETO]
+where ( [Measures].[Faturamento] )
+
+--consulta o faturamento por cidade x periodo de janeiro 2014 até junho 2014
+--com o comando .Members, sera listado todos as cidades
+Select ( { [Cliente].[Cidade].Members } ) on rows,
+( { [Tempo].[Mës e Ano].&[2014]&[01-2014]&[01-2014]&[01-2014] : 
+    [Tempo].[Mës e Ano].&[2014]&[01-2014]&[02-2014]&[06-2014] } ) on columns
+ from [COMPLETO]
+where ( [Measures].[Faturamento] )
+
+--Exercicio Aula 02.7 - [Measures].Members
+--Lista todas as medidas lidas do Data Warehouse.
+Select ( { [Measures].Members } ) on rows,
+( { [Tempo].[Mës e Ano].&[2014]&[01-2014]&[01-2014]&[01-2014] : 
+    [Tempo].[Mës e Ano].&[2014]&[01-2014]&[02-2014]&[06-2014] } ) on columns
+ from [COMPLETO]
+where ( [Cliente].[Cidade].&[Brasília] )

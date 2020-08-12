@@ -1,0 +1,127 @@
+--Comando RANK, serve para rankear a posicao de um determinado indicador ordenado
+--Comando COUNT, serve para contar a quantidade de membros que estao sendo exibidos
+
+--query comum
+--retorna o faturamento por cidade no ano de 2014
+WITH
+MEMBER [Measures].[Faturamento de Vendas] AS
+      '[Measures].[Faturamento]',
+FORMAT_STRING = "##,###.00"
+Select ( { [Cliente].[Hierarquia Geográfica].[Nível Cidade].Members } ) On Rows,
+       ( { [Measures].[Faturamento de Vendas] } ) On Columns
+  From [COMPLETO]
+ Where ( [Tempo].[Ano].&[2014] );
+
+--query comum 2 com NAMED SET
+--retorna o faturamento por cidade no ano de 2014
+--foi criado o NAMED SET [Cidades] pois ele eh necessario para utilizar o comando RANK daqui duas queries
+WITH
+SET [Cidades] AS
+   '[Cliente].[Hierarquia Geográfica].[Nível Cidade].Members'
+MEMBER [Measures].[Faturamento de Vendas] AS
+      '[Measures].[Faturamento]',
+FORMAT_STRING = "##,###.00"
+Select ( { [Cidades] } ) On Rows,
+       ( { [Measures].[Faturamento de Vendas] } ) On Columns
+  From [COMPLETO]
+ Where ( [Tempo].[Ano].&[2014] );
+
+
+--query com NAMED SET ordenado com o comando ORDER
+--retorna o faturamento por cidade no ano de 2014 ordenado por faturamento
+--a ordenacao com o comando ORDER foi realizada dentro do NAMED SET [Cidades] pois a partir disso conseguiremo utilizar o RANK na proxima query
+WITH
+SET [Cidades] AS
+   'Order( [Cliente].[Hierarquia Geográfica].[Nível Cidade].Members, [Measures].[Faturamento], BDESC)'
+MEMBER [Measures].[Faturamento de Vendas] AS
+       '[Measures].[Faturamento]',
+FORMAT_STRING = "##,###.00"
+Select ( { [Cidades] } ) On Rows,
+       ( { [Measures].[Faturamento de Vendas] } ) On Columns
+  From [COMPLETO]
+ Where ( [Tempo].[Ano].&[2014] );
+
+--Rank ordernado
+--retorna o faturamento por cidade no ano de 2014 ordenado por faturamento junto com o novo membro [Measures].[Posição no Rank] exibindo o rankeamento 
+--repare que no comando Rank, foi utilizando o membro [Cidades], esse membro jah possui uma ordenacao com o comando ORDER, 
+--sendo assim, o novo membro [Measures].[Posição no Rank] automaticamente entende que o rankeamento funciona de forma ordenada
+WITH
+SET [Cidades] AS
+   'Order( [Cliente].[Hierarquia Geográfica].[Nível Cidade].Members, [Measures].[Faturamento], BDESC)'
+MEMBER [Measures].[Faturamento de Vendas] AS
+       '[Measures].[Faturamento]',
+FORMAT_STRING = "##,###.00"
+MEMBER [Measures].[Posição no Rank] AS
+      'Rank( [Cliente].[Hierarquia Geográfica].CurrentMember, [Cidades] )',
+FORMAT_STRING = "#;#;-"
+Select ( { [Cidades] } ) On Rows,
+       ( { [Measures].[Faturamento de Vendas]
+	   ,   [Measures].[Posição no Rank] } ) On Columns
+  From [COMPLETO]
+ Where ( [Tempo].[Ano].&[2014] );
+
+
+--Rank sem ordenação
+--retorna o faturamento por cidade no ano de 2014 sem ordenacao junto com o novo membro [Measures].[Posição no Rank] exibindo o rankeamento 
+--repare que no comando Rank, foi utilizando o membro [Cidades], esse membro jah possui uma ordenacao com o comando ORDER, 
+--sendo assim, mesmo que o resultado exibido nao esteja ordenado, o novo membro [Measures].[Posição no Rank] automaticamente entende que o rankeamento funciona de forma ordenada
+WITH
+SET [Cidades] AS
+   'Order( [Cliente].[Hierarquia Geográfica].[Nível Cidade].Members, [Measures].[Faturamento], BDESC)'
+MEMBER [Measures].[Faturamento de Vendas] AS
+       '[Measures].[Faturamento]',
+FORMAT_STRING = "##,###.00"
+MEMBER [Measures].[Posição no Rank] AS
+      'Rank( [Cliente].[Hierarquia Geográfica].CurrentMember, [Cidades] )',
+FORMAT_STRING = "#;#;-"
+Select ( { [Cliente].[Hierarquia Geográfica].[Nível Cidade].Members } ) On Rows,
+       ( { [Measures].[Faturamento de Vendas]
+	   ,   [Measures].[Posição no Rank] } ) On Columns
+  From [COMPLETO]
+ Where ( [Tempo].[Ano].&[2014] );
+
+
+--Rank sem ordenação com COUNT
+--retorna o faturamento por cidade no ano de 2014 ordenado junto com o novo membro [Measures].[Posição no Rank] exibindo o rankeamento 
+--e o novo membro [Measures].[Contador de Cidades] exibindo a quantidade de registros que estao sendo retornados
+--repare que o comando COUNT conta a quantidade de membros abaixo do [Nível Cidade]
+WITH
+SET [Cidades] AS
+   'Order( [Cliente].[Hierarquia Geográfica].[Nível Cidade].Members, [Measures].[Faturamento], BDESC)'
+MEMBER [Measures].[Faturamento de Vendas] AS
+       '[Measures].[Faturamento]',
+FORMAT_STRING = "##,###.00"
+MEMBER [Measures].[Posição no Rank] AS
+      'Rank( [Cliente].[Hierarquia Geográfica].CurrentMember, [Cidades] )',
+FORMAT_STRING = "#;#;-"
+MEMBER [Measures].[Contador de Cidades] AS
+      '[Cliente].[Hierarquia Geográfica].[Nível Cidade].Count',
+FORMAT_STRING = "#;#;-"
+Select ( { [Cliente].[Hierarquia Geográfica].[Nível Cidade].Members } ) On Rows,
+       ( { [Measures].[Faturamento de Vendas]
+	   ,   [Measures].[Posição no Rank]
+	   ,   [Measures].[Contador de Cidades]} ) On Columns
+  From [COMPLETO]
+ Where ( [Tempo].[Ano].&[2014] );
+
+
+---------------------------------------------------------
+
+--Exercicio 06.05
+--Nem sempre quem vende mais é quem gera maior lucro. Veja a visão abaixo
+--Note que Campinas, que está na terceira posição de venda, gerou mais lucro que Goiás, que está na posição 2 do faturamento. Brasília que é a que mais vendeu, tem lucro menor que Campinas.
+--Neste MDX vemos a posição do ranking da Margem, numa visão ordenada por faturamento.
+WITH
+SET [Cidades Ordenadas Faturamento] AS
+'ORDER([Cliente].[Hierarquia Geográfica].[Nível Cidade].MEMBERS, [Measures].[Faturamento], BDESC)'
+SET [Cidades Ordenadas por Margem] AS
+'ORDER([Cliente].[Hierarquia Geográfica].[Nível Cidade].MEMBERS, [Measures].[Margem], BDESC)'
+MEMBER [Measures].[Faturamento de Vendas]
+AS
+'[Measures].[Faturamento]', FORMAT_STRING = "##,###.00"
+MEMBER [Measures].[Posição no Rank Margem] AS
+'RANK( [Cliente].[Hierarquia Geográfica].Currentmember, [Cidades Ordenadas por Margem])' , FORMAT_STRING = "#;#;-"
+SELECT ({ [Cidades Ordenadas Faturamento] }) ON ROWS,
+( { [Measures].[Faturamento de Vendas], [Measures].[Posição no Rank Margem]}) ON COLUMNS
+FROM [COMPLETO]
+WHERE ([Tempo].[Ano].&[2014]);

@@ -1,0 +1,52 @@
+--comando CROSSJOIN, serve para realizar quebras na consulta por mais de um termo
+
+--retorna os valores mes a mes de medidas de faturamento e margem quebrados por estado e cidade
+Select Non Empty ( CROSSJOIN ( { [Measures].[Faturamento], [Measures].[Margem] } , { [Cliente].[Estado].&[São Paulo] , [Cliente].[Estado].&[Rio de Janeiro] } ) ) On Rows, 
+                 ( { [Tempo].[Hierarquia do Mês e Ano].[Ano].&[2013].&[Primeiro Semestre 2013].&[2013]&[01-2013]&[01-2013].&[2013]&[01-2013]&[01-2013]&[01-2013] :
+                     [Tempo].[Hierarquia do Mês e Ano].[Ano].&[2013].&[Primeiro Semestre 2013].&[2013]&[01-2013]&[02-2013].&[2013]&[01-2013]&[02-2013]&[06-2013] } ) On Columns
+From [COMPLETO];
+
+
+--retorna os valores mes a mes dos produtos Frescor do Verao e Pedacos de Frutas quebrados por medidas de faturamento e margem e quebrados por estado e cidade 
+Select Non Empty ( CROSSJOIN ( { [Produto].[Marca].&[Frescor do Verão], [Produto].[Marca].&[Pedaços de Frutas] }, 
+                 ( CROSSJOIN ( { [Measures].[Faturamento], [Measures].[Margem] } , { [Cliente].[Estado].&[São Paulo] , [Cliente].[Estado].&[Rio de Janeiro] } ) ) ) ) On Rows, 
+                 ( { [Tempo].[Hierarquia do Mês e Ano].[Ano].&[2013].&[Primeiro Semestre 2013].&[2013]&[01-2013]&[01-2013].&[2013]&[01-2013]&[01-2013]&[01-2013] :
+                     [Tempo].[Hierarquia do Mês e Ano].[Ano].&[2013].&[Primeiro Semestre 2013].&[2013]&[01-2013]&[02-2013].&[2013]&[01-2013]&[02-2013]&[06-2013] } ) On Columns
+From [COMPLETO];
+
+------------------------------------------------------------------------------------
+--comando CROSSJOIN sem Non Empty
+--Primeiramente, eh recomendavel utilizar o comando Non Empty sempre que estiver utilizando o CROSSJOIN, pois, o processo estara realizando uma busca entre todos 
+--os cruzamentos de uma dimensao com outra
+
+--Exemplo SEM Non Empty
+--Retorna mes a mes todos os produtos quebrados por medidas de faturamento e margem e quebrados por todos os clientes
+--aparecem muitas linhas nulas desnecessarias no relatorio
+Select ( CROSSJOIN ( { [Produto].[Produto].Members }, 
+       ( CROSSJOIN ( { [Measures].[Faturamento], [Measures].[Margem] } , { [Cliente].[Cliente].Members } ) ) ) ) On Rows, 
+       ( { [Tempo].[Hierarquia do Mês e Ano].[Ano].&[2013].&[Primeiro Semestre 2013].&[2013]&[01-2013]&[01-2013].&[2013]&[01-2013]&[01-2013]&[01-2013] :
+           [Tempo].[Hierarquia do Mês e Ano].[Ano].&[2013].&[Primeiro Semestre 2013].&[2013]&[01-2013]&[02-2013].&[2013]&[01-2013]&[02-2013]&[06-2013] } ) On Columns
+From [COMPLETO];
+
+--Exemplo COM Non Empty
+--Retorna mes a mes todos os produtos quebrados por medidas de faturamento e margem e quebrados por todos os clientes
+--Nao aparecem as linhas nulas desnecessarias no relatorio, eliminando informacao desnecessaria e aproveitando melhor o processamento da query
+--OBS: algumas linhas aparecem com algumas colunas nulas, o Non Empty limpa a linha quando ela eh inteiramente nula
+Select Non Empty ( CROSSJOIN ( { [Produto].[Produto].Members }, 
+                 ( CROSSJOIN ( { [Measures].[Faturamento], [Measures].[Margem] } , { [Cliente].[Cliente].Members } ) ) ) ) On Rows, 
+                 ( { [Tempo].[Hierarquia do Mês e Ano].[Ano].&[2013].&[Primeiro Semestre 2013].&[2013]&[01-2013]&[01-2013].&[2013]&[01-2013]&[01-2013]&[01-2013] :
+                     [Tempo].[Hierarquia do Mês e Ano].[Ano].&[2013].&[Primeiro Semestre 2013].&[2013]&[01-2013]&[02-2013].&[2013]&[01-2013]&[02-2013]&[06-2013] } ) On Columns
+From [COMPLETO];
+
+
+--Exercicio 3.03
+--O CROSS JOIN é aplicado sobre as colunas, retornando dados sobrepostos no cabeçalho.
+SELECT [Cliente].[Hierarquia Geográfica].[Nível Região].&[Centro Oeste] ON ROWS,
+       CROSSJOIN ({[Measures].[Margem]} , {[Tempo].[Mês].&[2013]&[1]&[1]&[1]} ) ON COLUMNS
+  FROM [COMPLETO];
+
+--variacao da query acima
+SELECT [Cliente].[Hierarquia Geográfica].[Nível Região].&[Centro Oeste] ON ROWS,
+       {[Tempo].[Mês].&[2013]&[1]&[1]&[1]} ON COLUMNS
+  FROM [COMPLETO]
+ WhERE [Measures].[Margem];

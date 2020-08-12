@@ -1,0 +1,64 @@
+--Visualizar variacoes entre membros com PARALLELPERIOD
+--essa funcao eh ideal para realizar comparacoes valores entre periodos, por exemplo:
+--quanto de faturamento a empresa teve em janeiro de 2014 em relacao a janeiro de 2013
+
+--query comum
+--retorna o faturamento por mes do de jan/2013 a dez/2015
+Select ( { [Tempo].[Hierarquia do Mês e Ano].[Nível Mës e Ano] } ) On Rows,
+       ( { [Measures].[Faturamento] } ) On Columns
+  From [COMPLETO];
+
+--ParallelPeriod POSITIVO
+--a formula do novo membro [Faturamento Desce 2] funciona assim: 
+--o indicador, (nivel que deseja fazer o deslocamento, a quantidade de periodos que deseja deslocar, sobre qual membro que estou visualizando que deseja fazer o deslocamento)
+--retorna o faturamento por mes do de jan/2013 a dez/2015 e o novo membro [Faturamento Desce 2] contendo o valor de faturamento 2 linhas abaixo, ideal para comparar meses.
+WITH
+MEMBER [Measures].[Faturamento Desce 2] AS
+'([Measures].[Faturamento], ParallelPeriod([Tempo].[Hierarquia do Mês e Ano].[Nível Mës e Ano], 2, [Tempo].[Hierarquia do Mês e Ano].CurrentMember))',
+FORMAT_STRING = '#,###.00'
+Select ( { [Tempo].[Hierarquia do Mês e Ano].[Nível Mës e Ano] } ) On Rows,
+       ( { [Measures].[Faturamento] 
+	   ,   [Measures].[Faturamento Desce 2]} ) On Columns
+  From [COMPLETO];
+
+--ParallelPeriod NEGATIVO
+--a formula do novo membro [Faturamento Sobe 6] funciona assim: 
+--o indicador, (nivel que deseja fazer o deslocamento, a quantidade de periodos que deseja deslocar, sobre qual membro que estou visualizando que deseja fazer o deslocamento)
+--retorna o faturamento por mes do de jan/2013 a dez/2015 e o novo membro [Faturamento Sobe 6] contendo o valor de faturamento 6 linhas acima, ideal para comparar meses.
+WITH
+MEMBER [Measures].[Faturamento Sobe 6] AS
+'([Measures].[Faturamento], ParallelPeriod([Tempo].[Hierarquia do Mês e Ano].[Nível Mës e Ano], -6, [Tempo].[Hierarquia do Mês e Ano].CurrentMember))',
+FORMAT_STRING = '#,###.00'
+Select ( { [Tempo].[Hierarquia do Mês e Ano].[Nível Mës e Ano] } ) On Rows,
+       ( { [Measures].[Faturamento] 
+	   ,   [Measures].[Faturamento Sobe 6]} ) On Columns
+  From [COMPLETO];
+
+--ParallelPeriod Variacao Faturamento Ano em %
+--a formula do novo membro [Variacao Faturamento Ano] funciona assim: 
+--o indicador / (o indicador, (nivel que deseja fazer o deslocamento, a quantidade de periodos que deseja deslocar, sobre qual membro que estou visualizando que deseja fazer o deslocamento)) - 1 
+--retorna o faturamento por mes do de jan/2013 a dez/2015 e o novo membro [Variacao Faturamento Ano] contendo o valor de faturamento 12 linhas abaixo, ideal para comparar anos.
+WITH
+MEMBER [Measures].[Variação Faturamento Ano] AS
+'[Measures].[Faturamento] /  
+([Measures].[Faturamento], ParallelPeriod([Tempo].[Hierarquia do Mês e Ano].[Nível Mës e Ano], 12, [Tempo].[Hierarquia do Mês e Ano].CurrentMember)) -1',
+FORMAT_STRING = '#,###.00 %'
+Select ( { [Tempo].[Hierarquia do Mês e Ano].[Nível Mës e Ano] } ) On Rows,
+       ( { [Measures].[Faturamento] 
+	   ,   [Measures].[Variação Faturamento Ano]} ) On Columns
+  From [COMPLETO];
+
+------------------------------------
+
+--Exercicio 05.05
+--Queremos montar um MDX que obtenha a variação do faturamento entre o ano de 2013 e 2015, usando PARALLELPERIOD. Qual seria o MDX correto?
+--faturamento de 2015 - faturamento de 2013
+WITH MEMBER [Measures].[Variação Faturamento]
+AS
+'([Measures].[Faturamento]) - 
+([Measures].[Faturamento], ParallelPeriod([Tempo].[Hierarquia do Mês e Ano].[Ano], 2, 
+[Tempo].[Hierarquia do Mês e Ano].Currentmember)) ',
+FORMAT_STRING = "##,###.00"
+SELECT ({[Tempo].[Hierarquia do Mês e Ano].[Ano].&[2013],[Tempo].[Hierarquia do Mês e Ano].[Ano].&[2015] }) On Rows,
+({[Measures].[Faturamento], [Measures].[Variação Faturamento]}) On Columns
+FROM [COMPLETO]

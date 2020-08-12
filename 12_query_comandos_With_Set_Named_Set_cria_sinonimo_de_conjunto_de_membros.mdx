@@ -1,0 +1,43 @@
+--comando NAMED SET, serve de sinonimo para um conjunto de membros de uma dimensão (Tupla) que pode ser usado nas selecoes ou ate mesmo em formulas (calculos)
+
+--query comum
+--retorna o faturamento liquido para os 6 primeiros meses de 2013
+Select ( { [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[01-2013],
+           [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[02-2013],
+           [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[03-2013],
+           [Tempo].[Mës e Ano].&[2013]&[01-2013]&[02-2013]&[04-2013],
+           [Tempo].[Mës e Ano].&[2013]&[01-2013]&[02-2013]&[05-2013],
+           [Tempo].[Mës e Ano].&[2013]&[01-2013]&[02-2013]&[06-2013] } ) On Rows,
+           [Measures].[Faturamento Líquido] On Columns
+  From [COMPLETO];
+
+--Exemplo com NAMED SET (WITH SET)
+--exatamente igual a query anterior, retorna o faturamento liquido para os 6 primeiros meses de 2013
+--porem, repare que foi criado o NAMED SET [6 Primeiros Meses de 2013] com a dimensao Tempo e ela foi usada na selecao
+WITH SET [6 Primeiros Meses de 2013] AS
+      '{ [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[01-2013],
+         [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[02-2013],
+         [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[03-2013],
+         [Tempo].[Mës e Ano].&[2013]&[01-2013]&[02-2013]&[04-2013],
+         [Tempo].[Mës e Ano].&[2013]&[01-2013]&[02-2013]&[05-2013],
+         [Tempo].[Mës e Ano].&[2013]&[01-2013]&[02-2013]&[06-2013] }'
+Select ( { [6 Primeiros Meses de 2013] } ) On Rows,
+           [Measures].[Faturamento Líquido] On Columns
+  From [COMPLETO];
+
+--Exemplo com NAMED SET em calculos (WITH SET)
+--retorna o faturamento liquido para os 6 primeiros meses de 2013 junto com a soma de todo o faturamento liquido desse periodo
+--foi criado o NAMED SET [6 Primeiros Meses de 2013] com a dimensao Tempo e ela foi usada na no calculo do comando MEMBER com SUM
+WITH SET [6 Primeiros Meses de 2013] AS
+      '{ [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[01-2013],
+         [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[02-2013],
+         [Tempo].[Mës e Ano].&[2013]&[01-2013]&[01-2013]&[03-2013],
+         [Tempo].[Mës e Ano].&[2013]&[01-2013]&[02-2013]&[04-2013],
+         [Tempo].[Mës e Ano].&[2013]&[01-2013]&[02-2013]&[05-2013],
+         [Tempo].[Mës e Ano].&[2013]&[01-2013]&[02-2013]&[06-2013] }'
+MEMBER [Tempo].[Mës e Ano].[Soma dos Primeiros Meses de 2013] AS
+'SUM([6 Primeiros Meses de 2013] , [Measures].[Faturamento Líquido])'
+Select ( { [6 Primeiros Meses de 2013] , 
+           [Tempo].[Mës e Ano].[Soma dos Primeiros Meses de 2013] } ) On Rows,
+           [Measures].[Faturamento Líquido] On Columns
+  From [COMPLETO];

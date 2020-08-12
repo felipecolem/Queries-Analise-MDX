@@ -1,0 +1,87 @@
+--Navegar dentro das hierarquias
+--------------------------------------------------------
+
+--comando Children, exibe os filhos da hierarquia desejada
+
+--query comum
+--retorna o faturamento mes a mes para a regiao sudeste
+Select ( { [Cliente].[Hierarquia Geográfica].[Nível Região].&[Sudeste] } ) On Rows,
+       ( { [Tempo].[Mës e Ano].&[2014]&[01-2014]&[01-2014]&[01-2014] :
+           [Tempo].[Mës e Ano].&[2014]&[02-2014]&[04-2014]&[12-2014] } ) On Columns 
+  From [COMPLETO] 
+ Where [Measures].[Faturamento];
+
+--query com comando Children
+--retorna o faturamento mes a mes para OS FILHOS (Children) da regiao sudeste, ou seja, os estados da regiao sudeste
+Select ( { [Cliente].[Hierarquia Geográfica].[Nível Região].&[Sudeste].Children } ) On Rows,
+       ( { [Tempo].[Mës e Ano].&[2014]&[01-2014]&[01-2014]&[01-2014] :
+           [Tempo].[Mës e Ano].&[2014]&[02-2014]&[04-2014]&[12-2014] } ) On Columns 
+  From [COMPLETO] 
+ Where [Measures].[Faturamento];
+
+--------------------------------------------------------
+
+--comando Parent, exibe os pais da hierarquia desejada
+
+--query comum
+--retorna o faturamento mes a mes para a o estado Rio Grande do Sul
+Select ( { [Cliente].[Hierarquia Geográfica].[Nível Região].&[Sul].&[Rio Grande do Sul] } ) On Rows,
+       ( { [Tempo].[Mës e Ano].&[2014]&[01-2014]&[01-2014]&[01-2014] :
+           [Tempo].[Mës e Ano].&[2014]&[02-2014]&[04-2014]&[12-2014] } ) On Columns 
+  From [COMPLETO] 
+ Where [Measures].[Faturamento];
+
+--query com comando Parent
+--retorna o faturamento mes a mes para a OS PAIS do estado Rio Grande do Sul, ou seja, a regiao sul
+Select ( { [Cliente].[Hierarquia Geográfica].[Nível Região].&[Sul].&[Rio Grande do Sul].Parent } ) On Rows,
+       ( { [Tempo].[Mës e Ano].&[2014]&[01-2014]&[01-2014]&[01-2014] :
+           [Tempo].[Mës e Ano].&[2014]&[02-2014]&[04-2014]&[12-2014] } ) On Columns 
+  From [COMPLETO] 
+ Where [Measures].[Faturamento];
+
+--------------------------------------------------------
+
+--comando Descendants, semelhante ao Children, exibe os filhos da hierarquia desejada, porem ate a ultima camada de filhos
+
+--Ex: 1 - retorna o faturamento mes a mes para o estado do Rio Grande do Sul quebrando pelas cidades, e as lojas dentro da hierarquia
+Select ( { Descendants([Cliente].[Hierarquia Geográfica].[Nível Região].&[Sul].&[Rio Grande do Sul]) } ) On Rows,
+       ( { [Tempo].[Mës e Ano].&[2014]&[01-2014]&[01-2014]&[01-2014] :
+           [Tempo].[Mës e Ano].&[2014]&[02-2014]&[04-2014]&[12-2014] } ) On Columns 
+  From [COMPLETO] 
+ Where [Measures].[Faturamento];
+
+--Ex: 2 - retorna o faturamento mes a mes para a regiao sul quebrando pelos estados, as cidades, e as lojas dentro da hierarquia
+ Select ( { Descendants([Cliente].[Hierarquia Geográfica].[Nível Região].&[Sul]) } ) On Rows,
+       ( { [Tempo].[Mës e Ano].&[2014]&[01-2014]&[01-2014]&[01-2014] :
+           [Tempo].[Mës e Ano].&[2014]&[02-2014]&[04-2014]&[12-2014] } ) On Columns 
+  From [COMPLETO] 
+ Where [Measures].[Faturamento];
+
+--------------------------------------------------------
+
+--comando Ascendants, semelhante ao Parent, exibe os pais da hierarquia desejada, porem ate a ultima camada de filhos
+
+--query comum
+--retorna o faturamento mes a mes para a loja Delícias Lanches Porto Alegre - RS
+Select ( { [Cliente].[Hierarquia Geográfica].[Nível Região].&[Sul].&[Rio Grande do Sul].&[Porto Alegre].&[Delícias Lanches Porto Alegre - RS] } ) On Rows,
+       ( { [Tempo].[Mës e Ano].&[2014]&[01-2014]&[01-2014]&[01-2014] :
+           [Tempo].[Mës e Ano].&[2014]&[02-2014]&[04-2014]&[12-2014] } ) On Columns 
+  From [COMPLETO] 
+ Where [Measures].[Faturamento];
+
+--retorna o faturamento mes a mes para a loja Delícias Lanches Porto Alegre - RS subindo até o nível mais alto, passando pela cidade, estados e regioes ate chegar no All
+Select ( { Ascendants([Cliente].[Hierarquia Geográfica].[Nível Região].&[Sul].&[Rio Grande do Sul].&[Porto Alegre].&[Delícias Lanches Porto Alegre - RS]) } ) On Rows,
+       ( { [Tempo].[Mës e Ano].&[2014]&[01-2014]&[01-2014]&[01-2014] :
+           [Tempo].[Mës e Ano].&[2014]&[02-2014]&[04-2014]&[12-2014] } ) On Columns 
+  From [COMPLETO] 
+ Where [Measures].[Faturamento];
+
+--------------------------------------------------------
+
+--Exercicio Aula 02.9
+--retorna a hierarquia completa de baixo para cima (ASCENDANTS) comecando no Estado do Rio de Janeiro, que corresponde ao .Parent da cidade de Niterói
+Select ( { ASCENDANTS([Cliente].[Hierarquia Geográfica].[Nível Região].&[Sudeste].&[Rio de Janeiro].&[Niterói].Parent) } ) On Rows,
+       ( { [Tempo].[Mës e Ano].&[2014]&[01-2014]&[01-2014]&[01-2014] : 
+	       [Tempo].[Mës e Ano].&[2014]&[02-2014]&[04-2014]&[12-2014] } ) On Columns 
+  From [COMPLETO]
+ Where [Measures].[Faturamento];

@@ -1,0 +1,100 @@
+--Comando FILTER
+--Serve para filtrar os dados desejados no relatorio (semelhante a clausula where do SQL)
+
+--query comum
+--retorna o faturamento das marcas para o ano de 2014
+Select ( { [Produto].[Hierarquia de Produtos].[Nível Marca].Members } ) On Rows,
+       ( { [Measures].[Faturamento] } ) On Columns
+  From [COMPLETO]
+ Where [Tempo].[Ano].&[2014];
+
+--exemplo com FILTER
+--retorna o faturamento das marcas para o ano de 2014 filtrando apenas os faturamentos maior ou igual a 10 milhoes
+Select FILTER (
+              ( { [Produto].[Hierarquia de Produtos].[Nível Marca].Members } ) 
+			  ,   [Measures].[Faturamento] >= 10000000
+			  ) On Rows,
+              ( { [Measures].[Faturamento] } ) On Columns
+  From [COMPLETO]
+ Where [Tempo].[Ano].&[2014];
+
+---------------------------------------------------
+
+--exemplo com FILTER e ORDER
+--retorna o faturamento das marcas para o ano de 2014 filtrando apenas os faturamentos maior ou igual a 10 milhoes e ordernando global DESCENDENTE por faturamento
+Select FILTER (
+       ORDER  (
+              ( { [Produto].[Hierarquia de Produtos].[Nível Marca].Members } ) 
+			  ,   [Measures].[Faturamento], BDESC
+			  )
+			  ,   [Measures].[Faturamento] >= 10000000
+			  ) On Rows,
+              ( { [Measures].[Faturamento] } ) On Columns
+  From [COMPLETO]
+ Where [Tempo].[Ano].&[2014];
+
+
+--exemplo com FILTER e ORDER
+--retorna o faturamento das marcas para o ano de 2014 filtrando apenas os faturamentos maior ou igual a 7 milhoes e ordernando global DESCENDENTE por faturamento
+Select FILTER (
+       ORDER  (
+              ( { [Produto].[Hierarquia de Produtos].[Nível Marca].Members } ) 
+			  ,   [Measures].[Faturamento], BDESC
+			  )
+			  ,   [Measures].[Faturamento] >= 7000000
+			  ) On Rows,
+              ( { [Measures].[Faturamento] } ) On Columns
+  From [COMPLETO]
+ Where [Tempo].[Ano].&[2014];
+
+---------------------------------------------------
+
+--EXISTE UM PROBLEMA no uso do FILTER, obrigatoriamente vc deve utilizar o FILTER para o indicador que esteja aparecendo como coluna (On Columns)
+
+--exemplo com FILTER COM ERRO
+--retorna o faturamento das marcas para o ano de 2014 ordernando global DESCENDENTE por faturamento
+--proem o NAO esta filtrando apenas os faturamentos maior ou igual a 7 milhoes, pois o indicador [Measures].[Faturamento] nao esta mais como coluna (On Columns)
+Select FILTER (
+       ORDER  (
+              ( { [Produto].[Hierarquia de Produtos].[Nível Marca].Members } ) 
+			  ,   [Measures].[Faturamento], BDESC
+			  )
+			  ,   [Measures].[Faturamento] >= 7000000
+			  ) On Rows,
+              ( { [Tempo].[Ano].&[2014] } ) On Columns
+  From [COMPLETO]
+ Where ( { [Measures].[Faturamento] } );
+
+--SOLUCAO eh utilizar o CROSSJOIN
+--exemplo com FILTER e ORDER e CROSSJOIN
+--retorna o faturamento das marcas para o ano de 2014 ordernando global DESCENDENTE por faturamento 
+--e filtrando apenas os faturamentos maior ou igual a 7 milhoes, pois o indicador [Measures].[Faturamento] esta como coluna (On Columns)
+Select FILTER    (
+       ORDER     (
+       CROSSJOIN ( 
+	             ( { [Tempo].[Ano].&[2014] } ),
+			     ( { [Produto].[Hierarquia de Produtos].[Nível Marca].Members } ) 
+			     )
+			     ,   [Measures].[Faturamento], BDESC
+			     )
+			     ,   [Measures].[Faturamento] >= 7000000
+			     ) On Rows,
+                 ( { [Measures].[Faturamento] } ) On Columns
+  From [COMPLETO];
+
+---------------------------------------------------
+--Exercicio 3.09
+--Queremos executar uma consulta MDX para retornar apenas valores maiores que 25000000. Logo, montamos a seguinte consulta MDX:
+--Porém o resultado veio diferente do esperado:
+--Que mudanças devo fazer para o MDX dar certo?
+Select FILTER (
+       ORDER  (
+              ({ [Cliente].[Hierarquia Geográfica].[Nível Região].members })
+              ,  [Measures].[Faturamento], BDESC
+              )
+              ,  [Measures].[Faturamento] > 25000000
+			  )
+              On Rows,
+              ( {[Measures].[Faturamento]} ) On Columns
+  from [COMPLETO]
+ where ({[Tempo].[Ano].&[2014]});

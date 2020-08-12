@@ -1,0 +1,78 @@
+--comandos TOPCOUNT e BOTTOMCOUNT, servem para para limitar a quantidade de registros que deseja visualizar na consulta:
+--TOPCOUNT    - exibe apenas os primeiros
+--BOTTOMCOUNT - exibe apenas os ultimos
+
+--query comum
+--retorna o faturamento por cidade em 2014
+Select ( { [Cliente].[Hierarquia Geográfica].[Nível Cidade].Members } ) On Rows,
+       ( { [Tempo].[Hierarquia do Mês e Ano].[Ano].&[2014] } ) On Columns
+  From [COMPLETO]
+ Where [Measures].[Faturamento];
+
+
+--mesma consulta mas com um novo membro no WHERE
+--retorna o faturamento por cidade em 2014
+--o novo membro [Measures].[Faturamento de Vendas] foi criado apenas para facilitar a visualizacao com auxilio do comando FORMAT_STRING
+WITH
+MEMBER [Measures].[Faturamento de Vendas] AS
+      '[Measures].[Faturamento]',
+FORMAT_STRING = "##,###.00"
+Select ( { [Cliente].[Hierarquia Geográfica].[Nível Cidade].Members } ) On Rows,
+       ( { [Tempo].[Hierarquia do Mês e Ano].[Ano].&[2014] } ) On Columns
+  From [COMPLETO]
+ Where [Measures].[Faturamento de Vendas];
+
+--mesma consulta mas com ordenacao com o comando ORDER
+--retorna o faturamento por cidade em 2014 ordenados do maior para o menor
+WITH
+MEMBER [Measures].[Faturamento de Vendas] AS
+      '[Measures].[Faturamento]',
+FORMAT_STRING = "##,###.00"
+Select Order ( { [Cliente].[Hierarquia Geográfica].[Nível Cidade].Members }, [Measures].[Faturamento], BDESC ) On Rows,
+             ( { [Tempo].[Hierarquia do Mês e Ano].[Ano].&[2014] } ) On Columns
+  From [COMPLETO]
+ Where [Measures].[Faturamento de Vendas];
+
+--TopCount
+--retorna apenas as 3 cidades com o melhor faturamento em 2014 ordenados do maior para o menor
+--A funcao TopCount funciona assim: (selecao que deseja verificar o Top, quantidade de registros que deseja exibir, indicador que deseja usar como criterio para pegar os 3 maiores)
+WITH
+MEMBER [Measures].[Faturamento de Vendas] AS
+      '[Measures].[Faturamento]',
+FORMAT_STRING = "##,###.00"
+Select Order ( TopCount ( { [Cliente].[Hierarquia Geográfica].[Nível Cidade].Members } , 3 , [Measures].[Faturamento] ) , [Measures].[Faturamento], BDESC ) On Rows,
+             ( { [Tempo].[Hierarquia do Mês e Ano].[Ano].&[2014] } ) On Columns
+  From [COMPLETO]
+ Where [Measures].[Faturamento de Vendas];
+
+
+--BottomCount
+--retorna apenas as 3 cidades com o pior faturamento em 2014 ordenados do maior para o menor
+--A funcao BottomCount funciona assim: (selecao que deseja verificar o Bottom, quantidade de registros que deseja exibir, indicador que deseja usar como criterio para pegar os 3 maiores)
+WITH
+MEMBER [Measures].[Faturamento de Vendas] AS
+      '[Measures].[Faturamento]',
+FORMAT_STRING = "##,###.00"
+Select Order ( BottomCount ( { [Cliente].[Hierarquia Geográfica].[Nível Cidade].Members }, 3 , [Measures].[Faturamento] ), [Measures].[Faturamento], BDESC ) On Rows,
+             ( { [Tempo].[Hierarquia do Mês e Ano].[Ano].&[2014] } ) On Columns
+  From [COMPLETO]
+ Where [Measures].[Faturamento de Vendas];
+
+---------------------------------------------------------------------------
+
+
+--Exercicio 06.03
+--Temos a seguinte consulta: (imagem)
+--Como faço para ver, a partir da lista acima, os valores somente de Campinas, Goiás e Brasília (nesta ordem)?
+WITH MEMBER [Measures].[Faturamento de Vendas]
+AS
+'[Measures].[Faturamento]', FORMAT_STRING = "#,###.00"
+SELECT 
+ORDER ( 
+TopCount  (
+{[Cliente].[Hierarquia Geográfica].[Nível Cidade].Members} , 3, [Measures].[Faturamento]
+), [Measures].[Faturamento], BASC)
+on rows,
+([Tempo].[Hierarquia do Mês e Ano].[Ano].&[2014]) on columns
+from [COMPLETO]
+WHERE [Measures].[Faturamento de Vendas];
