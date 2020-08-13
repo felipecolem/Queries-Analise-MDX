@@ -1,0 +1,158 @@
+--Analise de Pareto
+
+--Relatorio Base
+--retorna o valor do faturamento ordenado por clientes, do maior para o menor, no ano de 2014
+--Esse relatorio contem as colunas bases que sao utilizadas para realizar os calculos de um relatorio de analise de Pareto
+--o proximo relatorio eh uma copia dele contendo apenas os campos necessarios para exibir numa analise de Pareto
+--SET [CLIENTES]                            : foi criado esse NAMED SET para ordenar o valor do faturamento por cliente em ordem decrescente 
+--MEMBER [Measures].[Faturamento de Vendas] : foi criado esse MEMBER para que seja possivel visualizar o valor do faturamento por cidade em 2014
+--MEMBER [Measures].[Posição no Rank]       : foi criado esse MEMBER para que seja possivel rankear as posicoes das cidades por faturamento
+--MEMBER [Measures].[% Vendas]              : foi criado esse MEMBER para que seja possivel visualizar o percentual de faturamento de vendas por cidade em relacao ao total de vendas
+--                                            repare que para esse MEMBER, foi utilizado no calculo o membro [Cliente].[Hierarquia Geográfica].[All], que representa TODAS os clientes
+--MEMBER [Measures].[Faturamento Acumulado] : foi criado esse MEMBER para que seja possivel visualizar a somatoria acumulativa linha a linha do faturamento por cidade
+--                                            repare que para esse MEMBER, foram utilizados as funcoes encadeadas SUM(HEAD(RANK))), confira a explicacao no link a seguir: 
+--                                            https://docs.google.com/presentation/d/1C7jKZNbzHqj8TkUePamJUcsrewHYrMb7vAkyNUxigfY/edit#slide=id.g903635e9fd_0_0
+--MEMBER [Measures].[Total de Clientes]     : foi criado esse MEMBER para que seja possivel visualizar a quantidade total de clientes
+--MEMBER [Measures].[% Número de Clientes]  : foi criado esse MEMBER para que seja possivel visualizar o percentual acumulativo do numero de clientes 
+--MEMBER [Measures].[% Vendas Acumuladas]   : foi criado esse MEMBER para que seja possivel visualizar a somatoria acumulativa linha a linha do percentual de faturamento de vendas por cidade em relacao ao total de vendas
+WITH
+SET [CLIENTES] AS
+   'ORDER( [Cliente].[Hierarquia Geográfica].[Nível Cliente], [Measures].[Faturamento], BDESC )'
+MEMBER [Measures].[Faturamento de Vendas] AS
+      '[Measures].[Faturamento]',
+FORMAT_STRING = "##,###.00"
+MEMBER [Measures].[Posição no Rank] AS
+      'RANK( [Cliente].[Hierarquia Geográfica].CurrentMember, [CLIENTES] )',
+FORMAT_STRING = "#;#;-"
+MEMBER [Measures].[% Vendas] AS
+      '[Measures].[Faturamento] / ([Measures].[Faturamento] , [Cliente].[Hierarquia Geográfica].[All] ) ',
+FORMAT_STRING = "#,###.00 %"
+MEMBER [Measures].[Faturamento Acumulado] AS
+      'SUM( HEAD( [CLIENTES], RANK( [Cliente].[Hierarquia Geográfica].CurrentMember, [CLIENTES] ) ), [Measures].[Faturamento] ) ',
+FORMAT_STRING = "#,###.00"
+MEMBER [Measures].[Total de Clientes] AS
+      '[CLIENTES].Count',
+FORMAT_STRING = "#;#;-"
+MEMBER [Measures].[% Número de Clientes] AS
+       '[Measures].[Posição no Rank] / [Measures].[Total de Clientes]',
+FORMAT_STRING = "#,###.00 %"
+MEMBER [Measures].[% Vendas Acumuladas] AS
+      'SUM( HEAD( [CLIENTES], RANK( [Cliente].[Hierarquia Geográfica].CurrentMember, [CLIENTES] ) ), [Measures].[% Vendas] ) ',
+FORMAT_STRING = "#,###.00 %"
+Select ( { [CLIENTES] } ) On Rows,
+       ( { [Measures].[Faturamento de Vendas]
+	   ,   [Measures].[Posição no Rank]
+	   ,   [Measures].[% Vendas]
+	   ,   [Measures].[Faturamento Acumulado] 
+	   ,   [Measures].[Total de Clientes] 
+	   ,   [Measures].[% Número de Clientes] 
+	   ,   [Measures].[% Vendas Acumuladas] } ) On Columns
+  From [COMPLETO]
+ Where ( [Tempo].[Ano].&[2014] );
+
+--Relatorio Analise de Pareto
+--Eh uma copia do relatorio acima, mas exibe apenas as colunas importantes para realizar a analise de Pareto, sendo eles:
+--[Measures].[Faturamento de Vendas], [Measures].[% Vendas Acumuladas] e [Measures].[% Número de Clientes], com isso eh possivel verificar onde ocorre o 80 / 20 da análise de Pareto
+WITH
+SET [CLIENTES] AS
+   'ORDER( [Cliente].[Hierarquia Geográfica].[Nível Cliente], [Measures].[Faturamento], BDESC )'
+MEMBER [Measures].[Faturamento de Vendas] AS
+      '[Measures].[Faturamento]',
+FORMAT_STRING = "##,###.00"
+MEMBER [Measures].[Posição no Rank] AS
+      'RANK( [Cliente].[Hierarquia Geográfica].CurrentMember, [CLIENTES] )',
+FORMAT_STRING = "#;#;-"
+MEMBER [Measures].[% Vendas] AS
+      '[Measures].[Faturamento] / ([Measures].[Faturamento] , [Cliente].[Hierarquia Geográfica].[All] ) ',
+FORMAT_STRING = "#,###.00 %"
+MEMBER [Measures].[Faturamento Acumulado] AS
+      'SUM( HEAD( [CLIENTES], RANK( [Cliente].[Hierarquia Geográfica].CurrentMember, [CLIENTES] ) ), [Measures].[Faturamento] ) ',
+FORMAT_STRING = "#,###.00"
+MEMBER [Measures].[Total de Clientes] AS
+      '[CLIENTES].Count',
+FORMAT_STRING = "#;#;-"
+MEMBER [Measures].[% Número de Clientes] AS
+       '[Measures].[Posição no Rank] / [Measures].[Total de Clientes]',
+FORMAT_STRING = "#,###.00 %"
+MEMBER [Measures].[% Vendas Acumuladas] AS
+      'SUM( HEAD( [CLIENTES], RANK( [Cliente].[Hierarquia Geográfica].CurrentMember, [CLIENTES] ) ), [Measures].[% Vendas] ) ',
+FORMAT_STRING = "#,###.00 %"
+Select ( { [CLIENTES] } ) On Rows,
+       ( { [Measures].[Faturamento de Vendas]
+	   ,   [Measures].[% Vendas Acumuladas]
+	   ,   [Measures].[% Número de Clientes] } ) On Columns
+  From [COMPLETO]
+ Where ( [Tempo].[Ano].&[2014] );
+
+------------------------------------------------------------------------------------------------------------------
+
+
+--Exercicio 7.05 ao 7.15
+--retorna o valor da margem ordenado por marcas, do maior para o menor, no ano de 2014.
+WITH
+SET [MARCAS] AS
+   'ORDER( [Produto].[Hierarquia de Produtos].[Nível Marca], [Measures].[Margem], BDESC )'
+MEMBER [Measures].[Margem por Marca] AS
+      '[Measures].[Margem]',
+FORMAT_STRING = "##,###.00"
+MEMBER [Measures].[Posição no Ranking] AS
+      'RANK( [Produto].[Hierarquia de Produtos].CurrentMember, [MARCAS] )',
+FORMAT_STRING = "#;#;-"
+MEMBER [Measures].[% Lucro] AS
+      '[Measures].[Margem] / ( [Measures].[Margem] , [Produto].[Hierarquia de Produtos].[All] )', 
+FORMAT_STRING = "##,###.00 %"
+MEMBER [Measures].[Margem Acumulado] AS
+       ' SUM( HEAD( [MARCAS] , RANK( [Produto].[Hierarquia de Produtos].CurrentMember, [MARCAS] ) ), [Measures].[Margem] ) ',
+FORMAT_STRING = "#,###.00"
+MEMBER [Measures].[Total de Marcas] AS
+      '[MARCAS].Count',
+FORMAT_STRING = "#;#;-"
+MEMBER [Measures].[% Número Produtos] AS
+      '[Measures].[Posição no Ranking] / [Measures].[Total de Marcas]',
+FORMAT_STRING = "##,###.00 %"
+MEMBER [Measures].[% Lucro Acumulados] AS
+       ' SUM( HEAD( [MARCAS] , RANK( [Produto].[Hierarquia de Produtos].CurrentMember, [MARCAS] ) ), [Measures].[% Lucro] ) ',
+FORMAT_STRING = "##,###.00 %"
+Select ( { [MARCAS] } ) On Rows,
+       ( { [Measures].[Margem por Marca] 
+	   ,   [Measures].[Posição no Ranking] 
+	   ,   [Measures].[% Lucro] 
+	   ,   [Measures].[Margem Acumulado]
+	   ,   [Measures].[Total de Marcas] 
+	   ,   [Measures].[% Número Produtos] 
+	   ,   [Measures].[% Lucro Acumulados] } ) On Columns
+  From [COMPLETO]
+ Where ( [Tempo].[Ano].&[2014] );
+
+--Exercicio 7.17
+--Retire as colunas que foram usadas para o cálculo e mantenha apenas as que são importantes para a Análise de Pareto.
+WITH
+SET [MARCAS] AS
+   'ORDER( [Produto].[Hierarquia de Produtos].[Nível Marca], [Measures].[Margem], BDESC )'
+MEMBER [Measures].[Margem por Marca] AS
+      '[Measures].[Margem]',
+FORMAT_STRING = "##,###.00"
+MEMBER [Measures].[Posição no Ranking] AS
+      'RANK( [Produto].[Hierarquia de Produtos].CurrentMember, [MARCAS] )',
+FORMAT_STRING = "#;#;-"
+MEMBER [Measures].[% Lucro] AS
+      '[Measures].[Margem] / ( [Measures].[Margem] , [Produto].[Hierarquia de Produtos].[All] )', 
+FORMAT_STRING = "##,###.00 %"
+MEMBER [Measures].[Margem Acumulado] AS
+       ' SUM( HEAD( [MARCAS] , RANK( [Produto].[Hierarquia de Produtos].CurrentMember, [MARCAS] ) ), [Measures].[Margem] ) ',
+FORMAT_STRING = "#,###.00"
+MEMBER [Measures].[Total de Marcas] AS
+      '[MARCAS].Count',
+FORMAT_STRING = "#;#;-"
+MEMBER [Measures].[% Número Produtos] AS
+      '[Measures].[Posição no Ranking] / [Measures].[Total de Marcas]',
+FORMAT_STRING = "##,###.00 %"
+MEMBER [Measures].[% Lucro Acumulados] AS
+       ' SUM( HEAD( [MARCAS] , RANK( [Produto].[Hierarquia de Produtos].CurrentMember, [MARCAS] ) ), [Measures].[% Lucro] ) ',
+FORMAT_STRING = "##,###.00 %"
+Select ( { [MARCAS] } ) On Rows,
+       ( { [Measures].[Margem por Marca] 
+	   ,   [Measures].[% Lucro Acumulados]
+	   ,   [Measures].[% Número Produtos] } ) On Columns
+  From [COMPLETO]
+ Where ( [Tempo].[Ano].&[2014] );
